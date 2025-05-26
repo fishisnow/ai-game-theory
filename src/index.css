@@ -1,0 +1,65 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    margin: 0;
+    font-family: 'Courier New', monospace;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    overflow-x: hidden;
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+}
+
+@layer components {
+  .cyber-gradient-text {
+    background: linear-gradient(45deg, #00ffff, #ff00ff, #ffff00);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .cyber-card {
+    @apply bg-black bg-opacity-80 border-2 rounded-2xl p-6 backdrop-blur-md;
+  }
+
+  .cyber-button {
+    @apply px-6 py-3 rounded-lg font-bold text-black transition-all duration-300 transform hover:scale-105;
+    background: linear-gradient(45deg, #00ff88, #00ffff);
+  }
+
+  .cyber-button:hover {
+    box-shadow: 0 0 20px rgba(0, 255, 136, 0.5);
+  }
+
+  .cyber-input {
+    @apply bg-black bg-opacity-80 border-2 border-cyber-green rounded-lg px-5 py-3 text-cyber-blue text-center text-xl transition-all duration-300;
+  }
+
+  .cyber-input:focus {
+    @apply outline-none border-cyber-yellow;
+    box-shadow: 0 0 15px rgba(255, 255, 0, 0.3);
+  }
+
+  .grid-background {
+    background-image: 
+      linear-gradient(rgba(0, 255, 255, 0.1) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0, 255, 255, 0.1) 1px, transparent 1px);
+    background-size: 50px 50px;
+    animation: gridMove 20s linear infinite;
+  }
+
+  .decoration-circle {
+    @apply absolute w-24 h-24 border-2 border-cyber-blue border-opacity-30 rounded-full animate-rotate-slow;
+  }
+}
+
+@keyframes gridMove {
+  0% { transform: translate(0, 0); }
+  100% { transform: translate(50px, 50px); }
+} 
