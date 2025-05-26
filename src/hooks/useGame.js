@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { playTournament, getAIStatus } from '../utils/aiStrategies';
+import { playTournament, getAIStatus, setAILogger } from '../utils/aiStrategies';
+import { useAIConsole } from './useAIConsole';
 
 export const useGame = () => {
   const [tournamentResult, setTournamentResult] = useState(null);
@@ -7,11 +8,21 @@ export const useGame = () => {
   const [aiStatus, setAiStatus] = useState(getAIStatus());
   const [selectedAIs, setSelectedAIs] = useState([]);
 
+  // 集成AI控制台
+  const aiConsole = useAIConsole();
+
   const startTournament = async () => {
     if (isPlaying || selectedAIs.length < 2) return;
 
     setIsPlaying(true);
     setTournamentResult(null);
+    
+    // 清空之前的日志并打开控制台
+    aiConsole.clearLogs();
+    aiConsole.openConsole();
+    
+    // 设置AI策略的日志记录器
+    setAILogger(aiConsole);
     
     try {
       // 异步执行AI锦标赛
@@ -19,6 +30,7 @@ export const useGame = () => {
       setTournamentResult(result);
     } catch (error) {
       console.error('AI锦标赛执行失败:', error);
+      aiConsole.logError(`AI对战过程中出现错误：${error.message}`, 'SYSTEM', error);
       alert(`AI对战过程中出现错误：${error.message}`);
     } finally {
       setIsPlaying(false);
@@ -28,6 +40,8 @@ export const useGame = () => {
   const resetGame = () => {
     setTournamentResult(null);
     setIsPlaying(false);
+    // 可选：清空日志
+    // aiConsole.clearLogs();
   };
 
   const updateAIStatus = () => {
@@ -50,6 +64,8 @@ export const useGame = () => {
     startTournament,
     resetGame,
     updateAIStatus,
-    handleAISelection
+    handleAISelection,
+    // AI控制台相关
+    aiConsole
   };
 }; 

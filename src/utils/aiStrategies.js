@@ -3,6 +3,14 @@ import { AIClient, AIConfigManager } from './aiClient';
 // AI配置管理器实例
 const configManager = new AIConfigManager();
 
+// 全局日志记录器
+let globalLogger = null;
+
+// 设置全局日志记录器
+export const setAILogger = (logger) => {
+  globalLogger = logger;
+};
+
 // 创建AI客户端实例
 const createAIClients = () => {
   const clients = {};
@@ -10,7 +18,7 @@ const createAIClients = () => {
   
   Object.entries(configs).forEach(([name, config]) => {
     if (configManager.isConfigured(name)) {
-      clients[name] = new AIClient(config);
+      clients[name] = new AIClient(config, globalLogger); // 传入日志记录器
     }
   });
   
@@ -161,6 +169,11 @@ export const playSingleMatch = async (selectedAIs) => {
     throw new Error('至少需要2个AI参赛');
   }
 
+  // 记录游戏开始
+  if (globalLogger) {
+    globalLogger.logGameStart(selectedAIs);
+  }
+
   let activePlayers = [...selectedAIs];
   const roundResults = [];
   const survivalRounds = {};
@@ -173,6 +186,11 @@ export const playSingleMatch = async (selectedAIs) => {
   let round = 1;
   
   while (activePlayers.length > 1) {
+    // 记录回合开始
+    if (globalLogger) {
+      globalLogger.logRoundStart(round, activePlayers);
+    }
+
     // 生成AI选择（支持异步）
     const aiChoices = {};
     const aiPromises = [];
@@ -189,6 +207,9 @@ export const playSingleMatch = async (selectedAIs) => {
         aiStrategies.getChoice(player, gameContext).then(choice => {
           aiChoices[player] = choice;
         }).catch(error => {
+          if (globalLogger) {
+            globalLogger.logError(`${player} 选择失败: ${error.message}`, player, error);
+          }
           console.error(`${player} 选择失败:`, error);
           // 如果AI调用失败，该AI自动被淘汰
           aiChoices[player] = -1; // 设置一个无效值，确保被淘汰
@@ -201,6 +222,11 @@ export const playSingleMatch = async (selectedAIs) => {
 
     // 计算本轮结果
     const roundResult = calculateRoundResult(aiChoices, activePlayers);
+    
+    // 记录回合结果
+    if (globalLogger) {
+      globalLogger.logRoundResult(round, roundResult);
+    }
     
     // 记录本轮结果
     roundResults.push({
@@ -226,7 +252,12 @@ export const playSingleMatch = async (selectedAIs) => {
     round++;
     
     // 防止无限循环
-    if (round > 20) break;
+    if (round > 20) {
+      if (globalLogger) {
+        globalLogger.logWarning('游戏超过20轮，强制结束', 'SYSTEM');
+      }
+      break;
+    }
   }
   
   // 最后的胜者获得最高轮数
@@ -239,11 +270,22 @@ export const playSingleMatch = async (selectedAIs) => {
     });
   }
 
+  const winner = activePlayers.length === 1 ? activePlayers[0] : activePlayers;
+  const winnerDisplayName = activePlayers.length === 1 ? getAIDisplayName(activePlayers[0]) : activePlayers.map(name => getAIDisplayName(name));
+
+  // 记录游戏结束
+  if (globalLogger) {
+    globalLogger.logGameEnd(
+      Array.isArray(winner) ? winner.join(', ') : winner, 
+      round - 1
+    );
+  }
+
   return {
     roundResults,
     survivalRounds,
-    winner: activePlayers.length === 1 ? activePlayers[0] : activePlayers,
-    winnerDisplayName: activePlayers.length === 1 ? getAIDisplayName(activePlayers[0]) : activePlayers.map(name => getAIDisplayName(name)), // 添加显示名称
+    winner,
+    winnerDisplayName, // 添加显示名称
     totalRounds: round - 1
   };
 };
@@ -252,6 +294,11 @@ export const playSingleMatch = async (selectedAIs) => {
 export const playTournament = async (selectedAIs) => {
   if (selectedAIs.length < 2) {
     throw new Error('至少需要2个AI参赛');
+  }
+
+  // 记录锦标赛开始
+  if (globalLogger) {
+    globalLogger.logInfo(`🏆 开始5场锦标赛，参赛AI: ${selectedAIs.join(', ')}`, 'SYSTEM', { selectedAIs });
   }
 
   const totalMatches = 5;
@@ -267,6 +314,10 @@ export const playTournament = async (selectedAIs) => {
 
   // 进行5次完整比赛
   for (let matchNumber = 1; matchNumber <= totalMatches; matchNumber++) {
+    if (globalLogger) {
+      globalLogger.logInfo(`🎯 开始第 ${matchNumber}/5 场比赛`, 'SYSTEM', { matchNumber, totalMatches });
+    }
+
     const matchResult = await playSingleMatch(selectedAIs);
     
     // 累计存活轮数
@@ -288,6 +339,15 @@ export const playTournament = async (selectedAIs) => {
       matchNumber,
       ...matchResult
     });
+
+    if (globalLogger) {
+      const winnerText = Array.isArray(matchResult.winner) ? matchResult.winner.join(', ') : matchResult.winner;
+      globalLogger.logInfo(`✅ 第 ${matchNumber} 场比赛结束，获胜者: ${winnerText}`, 'SYSTEM', {
+        matchNumber,
+        winner: matchResult.winner,
+        totalRounds: matchResult.totalRounds
+      });
+    }
   }
 
   // 计算平均存活轮数
@@ -301,6 +361,19 @@ export const playTournament = async (selectedAIs) => {
   selectedAIs.forEach(ai => {
     displayNameMap[ai] = getAIDisplayName(ai);
   });
+
+  // 记录锦标赛结束
+  if (globalLogger) {
+    const sortedByWins = Object.entries(winCounts)
+      .sort(([,a], [,b]) => b - a)
+      .map(([name, wins]) => `${name}(${wins}胜)`);
+    
+    globalLogger.logInfo(`🏆 锦标赛结束！获胜排名: ${sortedByWins.join(', ')}`, 'SYSTEM', {
+      winCounts,
+      averageSurvivalRounds,
+      totalMatches
+    });
+  }
 
   return {
     allMatches,

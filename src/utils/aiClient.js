@@ -1,16 +1,38 @@
 // OpenAI 格式的 AI 客户端
 export class AIClient {
-  constructor(config) {
+  constructor(config, logger = null) {
     this.apiUrl = config.apiUrl;
     this.apiKey = config.apiKey;
     this.model = config.model;
     this.name = config.name;
     this.vendor = config.vendor;
+    this.logger = logger; // 日志记录器
   }
 
   async makeChoice(gameContext) {
     try {
+      this.log('thinking', `开始分析第${gameContext.round}轮的策略...`);
+      
       const prompt = this.buildPrompt(gameContext);
+      this.log('thinking', `构建提示词完成，准备向${this.vendor}发送请求`);
+      
+      const requestBody = {
+        model: this.model,
+        messages: [
+          {
+            role: 'system',
+            content: '你是一个参与博弈论游戏的AI。你需要在"猜2/3平均数"游戏中做出最优选择。请详细说明你的思考过程，然后给出你的选择。'
+          },
+          {
+            role: 'user',
+            content: prompt
+          }
+        ],
+        max_tokens: 300, // 增加token数量以获取更详细的思考过程
+        temperature: 0.7
+      };
+
+      this.log('thinking', `发送API请求到 ${this.apiUrl}`);
       
       const response = await fetch(this.apiUrl, {
         method: 'POST',
@@ -18,43 +40,70 @@ export class AIClient {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${this.apiKey}`
         },
-        body: JSON.stringify({
-          model: this.model,
-          messages: [
-            {
-              role: 'system',
-              content: '你是一个参与博弈论游戏的AI。你需要在"猜2/3平均数"游戏中做出最优选择。'
-            },
-            {
-              role: 'user',
-              content: prompt
-            }
-          ],
-          max_tokens: 100,
-          temperature: 0.7
-        })
+        body: JSON.stringify(requestBody)
       });
 
       if (!response.ok) {
-        throw new Error(`API请求失败: ${response.status} ${response.statusText}`);
+        const errorMsg = `API请求失败: ${response.status} ${response.statusText}`;
+        this.log('error', errorMsg);
+        throw new Error(errorMsg);
       }
 
       const data = await response.json();
       const aiResponse = data.choices[0].message.content;
       
+      this.log('thinking', `收到AI回复: ${aiResponse}`);
+      
       // 从AI回复中提取数字
       const choice = this.extractNumber(aiResponse);
       
       if (choice === null || choice < 0 || choice > 100) {
-        console.warn(`${this.name} 返回无效选择: ${aiResponse}, 使用默认值`);
-        return Math.floor(Math.random() * 101); // 返回随机数作为备选
+        const warningMsg = `返回无效选择: ${aiResponse}, 使用备选策略`;
+        this.log('warning', warningMsg);
+        const fallbackChoice = this.getFallbackChoice();
+        this.log('decision', `使用备选策略选择: ${fallbackChoice}`, { 
+          originalResponse: aiResponse, 
+          fallbackChoice 
+        });
+        return fallbackChoice;
       }
+      
+      this.log('decision', `最终选择: ${choice}`, { 
+        choice, 
+        reasoning: aiResponse,
+        round: gameContext.round,
+        activePlayers: gameContext.activePlayers
+      });
       
       return choice;
     } catch (error) {
-      console.error(`${this.name} AI请求失败:`, error);
+      this.log('error', `AI请求失败: ${error.message}`, error);
       // 如果API调用失败，返回一个基于简单策略的数字
-      return this.getFallbackChoice();
+      const fallbackChoice = this.getFallbackChoice();
+      this.log('decision', `使用紧急备选策略: ${fallbackChoice}`, { fallbackChoice });
+      return fallbackChoice;
+    }
+  }
+
+  // 日志记录方法
+  log(type, message, data = null) {
+    if (this.logger) {
+      switch (type) {
+        case 'thinking':
+          this.logger.logAIThinking(this.name, message);
+          break;
+        case 'decision':
+          this.logger.logAIDecision(this.name, message, data);
+          break;
+        case 'error':
+          this.logger.logError(message, this.name, data);
+          break;
+        case 'warning':
+          this.logger.logWarning(message, this.name, data);
+          break;
+        default:
+          this.logger.logInfo(message, this.name, data);
+      }
     }
   }
 

@@ -6,8 +6,10 @@ import AISelector from './components/AISelector';
 import GameControl from './components/GameControl';
 import TournamentResults from './components/TournamentResults';
 import AIConfigPanel from './components/AIConfigPanel';
+import AIConsole from './components/AIConsole';
 import BackgroundDecorations from './components/BackgroundDecorations';
 import { useGame } from './hooks/useGame';
+import { Terminal } from 'lucide-react';
 
 function App() {
   const {
@@ -18,7 +20,8 @@ function App() {
     startTournament,
     resetGame,
     updateAIStatus,
-    handleAISelection
+    handleAISelection,
+    aiConsole
   } = useGame();
 
   const [showConfigPanel, setShowConfigPanel] = useState(false);
@@ -63,11 +66,33 @@ function App() {
         )}
       </div>
 
+      {/* AI控制台开关按钮 */}
+      <button
+        onClick={aiConsole.openConsole}
+        className="fixed bottom-6 right-6 bg-green-600 hover:bg-green-700 text-white p-4 rounded-full shadow-lg transition-all duration-300 hover:scale-110 z-40"
+        title="打开AI思考控制台"
+      >
+        <Terminal className="w-6 h-6" />
+        {aiConsole.logs.length > 0 && (
+          <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full w-6 h-6 flex items-center justify-center">
+            {aiConsole.logs.length > 99 ? '99+' : aiConsole.logs.length}
+          </span>
+        )}
+      </button>
+
       {/* AI配置面板 */}
       <AIConfigPanel
         isOpen={showConfigPanel}
         onClose={() => setShowConfigPanel(false)}
         onConfigUpdate={handleConfigUpdate}
+      />
+
+      {/* AI控制台 */}
+      <AIConsole
+        isOpen={aiConsole.isConsoleOpen}
+        onClose={aiConsole.closeConsole}
+        logs={aiConsole.logs}
+        onClearLogs={aiConsole.clearLogs}
       />
     </div>
   );

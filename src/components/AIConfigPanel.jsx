@@ -45,6 +45,8 @@ const AIConfigPanel = ({ isOpen, onClose, onConfigUpdate }) => {
     
     try {
       // 简单的测试请求
+      console.log(config.apiUrl)
+      console.log(config.apiKey)
       const response = await fetch(config.apiUrl, {
         method: 'POST',
         headers: {
