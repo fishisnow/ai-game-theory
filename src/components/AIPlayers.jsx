@@ -93,12 +93,6 @@ const AIPlayers = ({ aiStatus, onConfigClick }) => {
                   <span className="text-cyber-green">模型:</span> {modelInfo}
                 </div>
               )}
-              <div className="text-xs text-gray-300 mb-1">
-                <span className="text-cyber-green">策略:</span> {vendor.strategy}
-              </div>
-              <div className="text-xs text-gray-400">
-                {vendor.description}
-              </div>
             </div>
           );
         })}

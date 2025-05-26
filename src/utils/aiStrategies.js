@@ -43,33 +43,21 @@ export const aiStrategies = {
 export const aiVendors = [
   {
     name: 'OpenAI',
-    strategy: '深度推理型',
-    description: '通过多层递归思考来预测其他玩家的选择'
   },
   {
     name: 'Claude',
-    strategy: '逻辑分析型',
-    description: '基于理性假设进行逻辑推理'
   },
   {
     name: 'Gemini',
-    strategy: '概率计算型',
-    description: '使用概率分布模型进行决策'
   },
   {
     name: 'Azure-OpenAI',
-    strategy: '保守稳健型',
-    description: '采用保守策略，倾向于选择较小的安全数值'
   },
   {
     name: 'DeepSeek',
-    strategy: '心理分析型',
-    description: '深度分析对手心理，采用激进的博弈策略'
   },
   {
-    name: 'Qwen',
-    strategy: '适应进化型',
-    description: '根据游戏进程动态调整策略，具有强适应性'
+    name: 'Alibaba',
   }
 ];
 

@@ -228,7 +228,7 @@ export class AIConfigManager {
         enabled: false,
         tested: false
       },
-      'Qwen': {
+      'Alibaba': {
         vendor: 'Alibaba',
         name: 'Qwen',
         apiUrl: 'https://dashscope.aliyuncs.com/api/v1/services/aigc/text-generation/generation',
