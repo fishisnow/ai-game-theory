@@ -1,50 +1,49 @@
 import React from 'react';
+import { getAIDisplayName } from '../utils/aiStrategies';
 
 const GameControl = ({ 
-  playerChoice, 
-  onInputChange, 
-  onKeyPress, 
   onStartTournament, 
   onResetGame,
-  isPlaying
+  isPlaying,
+  selectedAIs = []
 }) => {
+  const canStart = selectedAIs.length >= 2 && !isPlaying;
+
+  // 获取选中AI的显示名称
+  const getSelectedAIDisplayNames = () => {
+    return selectedAIs.map(ai => getAIDisplayName(ai));
+  };
+
   return (
     <div className="cyber-card border-cyber-green shadow-lg shadow-cyber-green/20 text-center p-4">
       <h3 className="text-xl text-cyber-green text-center mb-4 flex items-center justify-center">
         <span className="mr-2">🎮</span>
-        开始游戏
+        AI博弈对战控制台
       </h3>
       <div className="space-y-4">
-        <div>
-          <label 
-            htmlFor="playerChoice" 
-            className="block text-cyber-green text-lg mb-3"
-          >
-            请输入您的选择 (0-100):
-          </label>
-          <input
-            type="number"
-            id="playerChoice"
-            className="cyber-input w-40 mx-3"
-            min="0"
-            max="100"
-            placeholder="输入数字"
-            value={playerChoice}
-            onChange={(e) => onInputChange(e.target.value)}
-            onKeyPress={onKeyPress}
-            disabled={isPlaying}
-          />
+        <div className="text-gray-300 text-sm mb-4">
+          {selectedAIs.length > 0 ? (
+            <>
+              已选择 <span className="text-cyber-blue font-bold">{selectedAIs.length}</span> 个AI参赛：
+              <div className="text-cyber-yellow mt-2 text-xs">
+                {getSelectedAIDisplayNames().join(' | ')}
+              </div>
+            </>
+          ) : (
+            <span className="text-red-400">请先选择参赛的AI模型</span>
+          )}
         </div>
+        
         <div className="flex justify-center space-x-3">
           <button 
-            className={`cyber-button text-base uppercase px-5 py-2 ${isPlaying ? 'opacity-50 cursor-not-allowed' : ''}`}
+            className={`cyber-button text-base uppercase px-6 py-3 ${!canStart ? 'opacity-50 cursor-not-allowed' : ''}`}
             onClick={onStartTournament}
-            disabled={isPlaying}
+            disabled={!canStart}
           >
-            {isPlaying ? '比赛进行中...' : '开始对决'}
+            {isPlaying ? '🔥 AI激战中...' : '🚀 开始AI锦标赛'}
           </button>
           <button 
-            className="px-5 py-2 rounded-lg font-bold text-white transition-all duration-300 transform hover:scale-105 uppercase text-base"
+            className="px-6 py-3 rounded-lg font-bold text-white transition-all duration-300 transform hover:scale-105 uppercase text-base"
             style={{
               background: 'linear-gradient(45deg, #ff4444, #ff8888)',
               boxShadow: '0 0 20px rgba(255, 68, 68, 0.3)'
@@ -52,14 +51,23 @@ const GameControl = ({
             onClick={onResetGame}
             disabled={isPlaying}
           >
-            重置游戏
+            🔄 重置对战
           </button>
         </div>
-        {isPlaying && (
+        
+        {isPlaying && selectedAIs.length > 0 && (
           <div className="text-cyber-yellow text-sm animate-pulse">
-            🔥 5场激烈比赛进行中，请稍候...
+            ⚡ {selectedAIs.length}个AI正在进行5场激烈的淘汰制锦标赛，请稍候...
           </div>
         )}
+        
+        <div className="mt-4 text-xs text-gray-400">
+          {selectedAIs.length < 2 ? (
+            <span className="text-red-400">💡 至少需要选择2个AI才能开始比赛</span>
+          ) : (
+            <span>💡 每场比赛将从{selectedAIs.length}个AI开始，逐轮淘汰距离目标值最远的AI，直到决出单场胜者</span>
+          )}
+        </div>
       </div>
     </div>
   );

@@ -1,61 +1,74 @@
-import React from 'react';
-import { useGame } from './hooks/useGame';
+import React, { useState } from 'react';
 import Header from './components/Header';
 import GameRules from './components/GameRules';
 import AIPlayers from './components/AIPlayers';
+import AISelector from './components/AISelector';
 import GameControl from './components/GameControl';
 import TournamentResults from './components/TournamentResults';
+import AIConfigPanel from './components/AIConfigPanel';
 import BackgroundDecorations from './components/BackgroundDecorations';
+import { useGame } from './hooks/useGame';
 
 function App() {
   const {
-    playerChoice,
     tournamentResult,
-    isGameStarted,
     isPlaying,
+    aiStatus,
+    selectedAIs,
     startTournament,
     resetGame,
-    handleInputChange,
-    handleKeyPress
+    updateAIStatus,
+    handleAISelection
   } = useGame();
 
+  const [showConfigPanel, setShowConfigPanel] = useState(false);
+
+  const handleConfigUpdate = () => {
+    updateAIStatus();
+  };
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-dark-bg via-dark-secondary to-dark-tertiary 
-                    text-cyber-blue font-mono relative overflow-x-hidden">
-      
-      {/* 背景装饰 */}
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-black to-gray-800 text-white relative overflow-x-hidden">
       <BackgroundDecorations />
       
-      {/* 主要内容 */}
-      <div className="relative z-10 max-w-6xl mx-auto p-4 md:p-6">
-        
-        {/* 页面标题 */}
+      <div className="relative z-10 container mx-auto px-4 py-6">
         <Header />
         
-        {/* 主要内容区域 */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
           <GameRules />
-          <AIPlayers />
+          <AIPlayers 
+            aiStatus={aiStatus}
+            onConfigClick={() => setShowConfigPanel(true)}
+          />
         </div>
         
-        {/* 游戏控制区域 */}
-        <GameControl
-          playerChoice={playerChoice}
-          onInputChange={handleInputChange}
-          onKeyPress={handleKeyPress}
-          onStartTournament={startTournament}
-          onResetGame={resetGame}
-          isPlaying={isPlaying}
-        />
+        <div className="mb-6">
+          <AISelector 
+            onSelectionChange={handleAISelection}
+            selectedAIs={selectedAIs}
+          />
+        </div>
         
-        {/* 锦标赛结果展示 */}
-        {isGameStarted && (
-          <div className="mt-6">
-            <TournamentResults tournamentResult={tournamentResult} />
-          </div>
+        <div className="mb-6">
+          <GameControl
+            onStartTournament={startTournament}
+            onResetGame={resetGame}
+            isPlaying={isPlaying}
+            selectedAIs={selectedAIs}
+          />
+        </div>
+        
+        {tournamentResult && (
+          <TournamentResults tournamentResult={tournamentResult} />
         )}
-        
       </div>
+
+      {/* AI配置面板 */}
+      <AIConfigPanel
+        isOpen={showConfigPanel}
+        onClose={() => setShowConfigPanel(false)}
+        onConfigUpdate={handleConfigUpdate}
+      />
     </div>
   );
 }

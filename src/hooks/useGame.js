@@ -1,58 +1,55 @@
-import { useState, useCallback } from 'react';
-import { playTournament } from '../utils/aiStrategies';
+import { useState } from 'react';
+import { playTournament, getAIStatus } from '../utils/aiStrategies';
 
 export const useGame = () => {
-  const [playerChoice, setPlayerChoice] = useState('');
   const [tournamentResult, setTournamentResult] = useState(null);
-  const [isGameStarted, setIsGameStarted] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [aiStatus, setAiStatus] = useState(getAIStatus());
+  const [selectedAIs, setSelectedAIs] = useState([]);
 
-  const startTournament = useCallback(async () => {
-    const choice = parseInt(playerChoice);
-    
-    if (isNaN(choice) || choice < 0 || choice > 100) {
-      alert('请输入0到100之间的有效数字！');
-      return;
-    }
+  const startTournament = async () => {
+    if (isPlaying || selectedAIs.length < 2) return;
 
     setIsPlaying(true);
-    setIsGameStarted(true);
+    setTournamentResult(null);
     
-    // 模拟逐轮进行的效果
-    const result = playTournament(choice);
-    
-    // 添加延迟以模拟实时对战的感觉
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    setTournamentResult(result);
-    setIsPlaying(false);
-  }, [playerChoice]);
+    try {
+      // 异步执行AI锦标赛
+      const result = await playTournament(selectedAIs);
+      setTournamentResult(result);
+    } catch (error) {
+      console.error('AI锦标赛执行失败:', error);
+      alert(`AI对战过程中出现错误：${error.message}`);
+    } finally {
+      setIsPlaying(false);
+    }
+  };
 
   const resetGame = () => {
-    setPlayerChoice('');
     setTournamentResult(null);
-    setIsGameStarted(false);
     setIsPlaying(false);
   };
 
-  const handleInputChange = (value) => {
-    setPlayerChoice(value);
+  const updateAIStatus = () => {
+    setAiStatus(getAIStatus());
   };
 
-  const handleKeyPress = (event) => {
-    if (event.key === 'Enter' && !isPlaying) {
-      startTournament();
+  const handleAISelection = (newSelectedAIs) => {
+    setSelectedAIs(newSelectedAIs);
+    // 如果当前有比赛结果，清除它（因为参赛AI变了）
+    if (tournamentResult) {
+      setTournamentResult(null);
     }
   };
 
   return {
-    playerChoice,
     tournamentResult,
-    isGameStarted,
     isPlaying,
+    aiStatus,
+    selectedAIs,
     startTournament,
     resetGame,
-    handleInputChange,
-    handleKeyPress
+    updateAIStatus,
+    handleAISelection
   };
 }; 

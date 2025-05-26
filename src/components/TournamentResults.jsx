@@ -5,11 +5,12 @@ const TournamentResults = ({ tournamentResult }) => {
   
   if (!tournamentResult) return null;
 
-  const { allMatches, totalSurvivalRounds, averageSurvivalRounds, winCounts, totalMatches } = tournamentResult;
+  const { allMatches, totalSurvivalRounds, averageSurvivalRounds, winCounts, totalMatches, displayNameMap } = tournamentResult;
 
-  // 为柱状图准备数据（总存活轮数）
+  // 为柱状图准备数据（总存活轮数）- 使用显示名称
   const chartData = Object.entries(totalSurvivalRounds).map(([name, rounds]) => ({
     name,
+    displayName: displayNameMap[name] || name,
     rounds,
     average: averageSurvivalRounds[name],
     wins: winCounts[name],
@@ -19,19 +20,21 @@ const TournamentResults = ({ tournamentResult }) => {
   // 获取颜色
   const getPlayerColor = (name) => {
     const colors = {
-      '您': '#00ffff',
-      'GPT-4': '#ff00ff', 
-      'Claude': '#00ff88',
-      'Gemini': '#ffff00'
+      'OpenAI': '#00ffff',
+      'Claude': '#ff00ff', 
+      'Gemini': '#00ff88',
+      'Azure-OpenAI': '#ffff00',
+      'DeepSeek': '#ff6600',
+      'Qwen': '#9966ff'
     };
     return colors[name] || '#ffffff';
   };
 
-  // 找出总冠军
+  // 找出总冠军 - 使用显示名称
   const maxWins = Math.max(...Object.values(winCounts));
   const champions = Object.entries(winCounts)
     .filter(([_, wins]) => wins === maxWins)
-    .map(([name, _]) => name);
+    .map(([name, _]) => displayNameMap[name] || name);
 
   return (
     <div className="space-y-6">
@@ -69,7 +72,7 @@ const TournamentResults = ({ tournamentResult }) => {
           {chartData.map((data, index) => (
             <div key={index} className="space-y-2">
               <div className="flex justify-between items-center">
-                <span className="text-gray-300 font-semibold">{data.name}</span>
+                <span className="text-gray-300 font-semibold">{data.displayName}</span>
                 <div className="text-right">
                   <div className="text-cyber-blue font-bold">{data.rounds} 轮总计</div>
                   <div className="text-xs text-gray-400">平均 {data.average} 轮 | {data.wins} 胜</div>
@@ -119,6 +122,10 @@ const TournamentResults = ({ tournamentResult }) => {
           <div className="space-y-4">
             {(() => {
               const match = allMatches.find(m => m.matchNumber === selectedMatch);
+              const winnerDisplay = Array.isArray(match.winnerDisplayName) 
+                ? match.winnerDisplayName.join(', ') 
+                : match.winnerDisplayName;
+              
               return (
                 <>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-center text-sm">
@@ -129,7 +136,7 @@ const TournamentResults = ({ tournamentResult }) => {
                     <div>
                       <span className="text-cyber-yellow">胜者:</span>
                       <span className="text-cyber-blue ml-2 font-bold">
-                        {Array.isArray(match.winner) ? match.winner.join(', ') : match.winner}
+                        {winnerDisplay}
                       </span>
                     </div>
                     <div>
@@ -146,7 +153,7 @@ const TournamentResults = ({ tournamentResult }) => {
                             第 {round.round} 轮
                           </h4>
                           <div className="text-xs text-gray-400">
-                            参与: {round.activePlayers.join(', ')}
+                            参与: {round.activeDisplayNames ? round.activeDisplayNames.join(', ') : round.activePlayers.join(', ')}
                           </div>
                         </div>
                         
@@ -162,7 +169,9 @@ const TournamentResults = ({ tournamentResult }) => {
                           <div>
                             <span className="text-cyber-yellow">淘汰:</span>
                             <span className="text-red-400 ml-1 font-bold">
-                              {round.hasElimination ? round.eliminatedPlayers.join(', ') : '无'}
+                              {round.hasElimination ? 
+                                (round.eliminatedDisplayNames ? round.eliminatedDisplayNames.join(', ') : round.eliminatedPlayers.join(', ')) 
+                                : '无'}
                             </span>
                           </div>
                         </div>
@@ -171,7 +180,7 @@ const TournamentResults = ({ tournamentResult }) => {
                           <table className="w-full text-xs border-collapse">
                             <thead>
                               <tr className="bg-gray-800">
-                                <th className="border border-gray-600 p-1 text-cyber-blue">玩家</th>
+                                <th className="border border-gray-600 p-1 text-cyber-blue">AI模型</th>
                                 <th className="border border-gray-600 p-1 text-cyber-blue">选择</th>
                                 <th className="border border-gray-600 p-1 text-cyber-blue">差距</th>
                                 <th className="border border-gray-600 p-1 text-cyber-blue">状态</th>
@@ -180,7 +189,9 @@ const TournamentResults = ({ tournamentResult }) => {
                             <tbody>
                               {round.results.map((result, idx) => (
                                 <tr key={idx} className={result.isEliminated ? 'bg-red-900 bg-opacity-30' : ''}>
-                                  <td className="border border-gray-600 p-1 font-semibold">{result.name}</td>
+                                  <td className="border border-gray-600 p-1 font-semibold">
+                                    {result.displayName || result.name}
+                                  </td>
                                   <td className="border border-gray-600 p-1 text-center text-cyber-blue font-bold">
                                     {result.choice}
                                   </td>
