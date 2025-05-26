@@ -1,12 +1,13 @@
-import { useState } from 'react';
-import { aiStrategies, calculateGameResult } from '../utils/aiStrategies';
+import { useState, useCallback } from 'react';
+import { playTournament } from '../utils/aiStrategies';
 
 export const useGame = () => {
   const [playerChoice, setPlayerChoice] = useState('');
-  const [gameResult, setGameResult] = useState(null);
+  const [tournamentResult, setTournamentResult] = useState(null);
   const [isGameStarted, setIsGameStarted] = useState(false);
+  const [isPlaying, setIsPlaying] = useState(false);
 
-  const startGame = () => {
+  const startTournament = useCallback(async () => {
     const choice = parseInt(playerChoice);
     
     if (isNaN(choice) || choice < 0 || choice > 100) {
@@ -14,24 +15,24 @@ export const useGame = () => {
       return;
     }
 
-    // 生成AI选择
-    const aiChoices = {
-      'GPT-4': aiStrategies['GPT-4'](),
-      'Claude': aiStrategies['Claude'](),
-      'Gemini': aiStrategies['Gemini']()
-    };
-
-    // 计算结果
-    const result = calculateGameResult(choice, aiChoices);
-    
-    setGameResult(result);
+    setIsPlaying(true);
     setIsGameStarted(true);
-  };
+    
+    // 模拟逐轮进行的效果
+    const result = playTournament(choice);
+    
+    // 添加延迟以模拟实时对战的感觉
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    
+    setTournamentResult(result);
+    setIsPlaying(false);
+  }, [playerChoice]);
 
   const resetGame = () => {
     setPlayerChoice('');
-    setGameResult(null);
+    setTournamentResult(null);
     setIsGameStarted(false);
+    setIsPlaying(false);
   };
 
   const handleInputChange = (value) => {
@@ -39,16 +40,17 @@ export const useGame = () => {
   };
 
   const handleKeyPress = (event) => {
-    if (event.key === 'Enter') {
-      startGame();
+    if (event.key === 'Enter' && !isPlaying) {
+      startTournament();
     }
   };
 
   return {
     playerChoice,
-    gameResult,
+    tournamentResult,
     isGameStarted,
-    startGame,
+    isPlaying,
+    startTournament,
     resetGame,
     handleInputChange,
     handleKeyPress

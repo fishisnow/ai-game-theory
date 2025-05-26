@@ -4,15 +4,16 @@ import Header from './components/Header';
 import GameRules from './components/GameRules';
 import AIPlayers from './components/AIPlayers';
 import GameControl from './components/GameControl';
-import GameResults from './components/GameResults';
+import TournamentResults from './components/TournamentResults';
 import BackgroundDecorations from './components/BackgroundDecorations';
 
 function App() {
   const {
     playerChoice,
-    gameResult,
+    tournamentResult,
     isGameStarted,
-    startGame,
+    isPlaying,
+    startTournament,
     resetGame,
     handleInputChange,
     handleKeyPress
@@ -26,13 +27,13 @@ function App() {
       <BackgroundDecorations />
       
       {/* 主要内容 */}
-      <div className="relative z-10 max-w-7xl mx-auto p-5 md:p-8">
+      <div className="relative z-10 max-w-6xl mx-auto p-4 md:p-6">
         
         {/* 页面标题 */}
         <Header />
         
         {/* 主要内容区域 */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-10">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
           <GameRules />
           <AIPlayers />
         </div>
@@ -42,14 +43,15 @@ function App() {
           playerChoice={playerChoice}
           onInputChange={handleInputChange}
           onKeyPress={handleKeyPress}
-          onStartGame={startGame}
+          onStartTournament={startTournament}
           onResetGame={resetGame}
+          isPlaying={isPlaying}
         />
         
-        {/* 游戏结果展示 */}
+        {/* 锦标赛结果展示 */}
         {isGameStarted && (
-          <div className="mt-10">
-            <GameResults gameResult={gameResult} />
+          <div className="mt-6">
+            <TournamentResults tournamentResult={tournamentResult} />
           </div>
         )}
         
