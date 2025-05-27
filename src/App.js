@@ -18,6 +18,7 @@ function App() {
     aiStatus,
     selectedAIs,
     startTournament,
+    stopTournament,
     resetGame,
     updateAIStatus,
     handleAISelection,
@@ -55,6 +56,7 @@ function App() {
         <div className="mb-6">
           <GameControl
             onStartTournament={startTournament}
+            onStopTournament={stopTournament}
             onResetGame={resetGame}
             isPlaying={isPlaying}
             selectedAIs={selectedAIs}

@@ -151,29 +151,33 @@ export const calculateRoundResult = (aiChoices, activePlayers) => {
   };
 };
 
-// 单次完整比赛（从选定的AI开始）
-export const playSingleMatch = async (selectedAIs) => {
+// 单场比赛逻辑
+export const playSingleMatch = async (selectedAIs, abortSignal = null) => {
   if (selectedAIs.length < 2) {
     throw new Error('至少需要2个AI参赛');
   }
+
+  let activePlayers = [...selectedAIs];
+  const roundResults = [];
+  const survivalRounds = {};
+  let round = 1;
+
+  // 初始化存活轮数
+  selectedAIs.forEach(ai => {
+    survivalRounds[ai] = 0;
+  });
 
   // 记录游戏开始
   if (globalLogger) {
     globalLogger.logGameStart(selectedAIs);
   }
 
-  let activePlayers = [...selectedAIs];
-  const roundResults = [];
-  const survivalRounds = {};
-  
-  // 初始化存活轮数
-  selectedAIs.forEach(ai => {
-    survivalRounds[ai] = 0;
-  });
-  
-  let round = 1;
-  
   while (activePlayers.length > 1) {
+    // 检查是否被终止
+    if (abortSignal && abortSignal.aborted) {
+      throw new Error('比赛已被终止');
+    }
+
     // 记录回合开始
     if (globalLogger) {
       globalLogger.logRoundStart(round, activePlayers);
@@ -207,6 +211,11 @@ export const playSingleMatch = async (selectedAIs) => {
     
     // 等待所有AI做出选择
     await Promise.all(aiPromises);
+
+    // 再次检查是否被终止
+    if (abortSignal && abortSignal.aborted) {
+      throw new Error('比赛已被终止');
+    }
 
     // 计算本轮结果
     const roundResult = calculateRoundResult(aiChoices, activePlayers);
@@ -279,7 +288,7 @@ export const playSingleMatch = async (selectedAIs) => {
 };
 
 // 5次完整比赛的锦标赛
-export const playTournament = async (selectedAIs) => {
+export const playTournament = async (selectedAIs, abortSignal = null) => {
   if (selectedAIs.length < 2) {
     throw new Error('至少需要2个AI参赛');
   }
@@ -302,11 +311,16 @@ export const playTournament = async (selectedAIs) => {
 
   // 进行5次完整比赛
   for (let matchNumber = 1; matchNumber <= totalMatches; matchNumber++) {
+    // 检查是否被终止
+    if (abortSignal && abortSignal.aborted) {
+      throw new Error('锦标赛已被终止');
+    }
+
     if (globalLogger) {
       globalLogger.logInfo(`🎯 开始第 ${matchNumber}/5 场比赛`, 'SYSTEM', { matchNumber, totalMatches });
     }
 
-    const matchResult = await playSingleMatch(selectedAIs);
+    const matchResult = await playSingleMatch(selectedAIs, abortSignal);
     
     // 累计存活轮数
     Object.entries(matchResult.survivalRounds).forEach(([player, rounds]) => {
