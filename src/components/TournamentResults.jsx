@@ -20,10 +20,10 @@ const TournamentResults = ({ tournamentResult }) => {
   // 获取颜色
   const getPlayerColor = (name) => {
     const colors = {
-      'OpenAI': '#00ffff',
+      'GPT': '#00ffff',
       'Claude': '#ff00ff', 
       'Gemini': '#00ff88',
-      'Azure-OpenAI': '#ffff00',
+      'Doubao': '#ffff00',
       'DeepSeek': '#ff6600',
       'Qwen': '#9966ff'
     };
@@ -42,7 +42,7 @@ const TournamentResults = ({ tournamentResult }) => {
       <div className="cyber-card border-cyber-yellow shadow-lg shadow-cyber-yellow/20 p-4">
         <h3 className="text-xl text-cyber-yellow text-center mb-4 flex items-center justify-center">
           <span className="mr-2">🏆</span>
-          5场比赛总结
+          10场比赛总结
         </h3>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
           <div>

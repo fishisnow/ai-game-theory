@@ -1,3 +1,14 @@
+// 处理模型名称，截断超过3个连字符的部分
+export const formatModelName = (modelName) => {
+  if (!modelName) return '';
+  
+  const parts = modelName.split('-');
+  if (parts.length > 3) {
+    return parts.slice(0, 3).join('-');
+  }
+  return modelName;
+};
+
 // OpenAI 格式的 AI 客户端
 export class AIClient {
   constructor(config, logger = null) {
@@ -24,8 +35,7 @@ export class AIClient {
             role: 'user',
             content: prompt
           }
-        ],
-        max_tokens: 1024
+        ]
       };
       
       const response = await fetch(this.apiUrl, {
@@ -239,9 +249,9 @@ export class AIConfigManager {
 
   getDefaultConfigs() {
     return {
-      'OpenAI': {
+      'GPT': {
         vendor: 'OpenAI',
-        name: 'OpenAI',
+        name: 'GPT',
         apiUrl: 'https://api.openai.com/v1/chat/completions',
         apiKey: '',
         model: 'gpt-4',
@@ -284,7 +294,7 @@ export class AIConfigManager {
         enabled: false,
         tested: false
       },
-      'Alibaba': {
+      'Qwen': {
         vendor: 'Alibaba',
         name: 'Qwen',
         apiUrl: 'https://dashscope.aliyuncs.com/api/v1/services/aigc/text-generation/generation',
@@ -328,11 +338,11 @@ export class AIConfigManager {
     return this.isConfigured(name) && config.tested;
   }
 
-  // 获取实际参赛的模型名称（厂商 + 模型）
+  // 获取实际参赛的模型名称
   getDisplayName(name) {
     const config = this.configs[name];
     if (!config) return name;
-    return `${config.model}`;
+    return formatModelName(config.model);
   }
 
   // 获取厂商名称

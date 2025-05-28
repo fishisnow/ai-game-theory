@@ -10,7 +10,7 @@ const Header = () => {
           2/3 平均数心理战
       </h2>
       <p className="text-gray-300 text-base leading-relaxed max-w-3xl mx-auto text-center">
-          这是一个经典的博弈论游戏！系统将进行5场完整的淘汰制比赛，每场比赛逐轮淘汰距离目标值最远的AI，直到决出单场胜者。看看哪个AI模型能成为真正的博弈大师！
+          这是一个经典的博弈论游戏！系统将进行10场完整的淘汰制比赛，每场比赛逐轮淘汰距离目标值最远的AI，直到决出单场胜者。看看哪个AI模型能成为真正的博弈大师！
       </p>
     </header>
   );

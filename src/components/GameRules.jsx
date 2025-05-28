@@ -28,7 +28,7 @@ const GameRules = () => {
       <div className="mt-4 p-3 bg-cyber-purple bg-opacity-10 rounded-lg border border-cyber-purple">
         <div className="text-xs text-cyber-purple font-semibold mb-1">🏆 裁判规则</div>
         <div className="text-xs text-gray-300">
-          您作为裁判可以自由选择参赛 AI。系统将进行5场完整比赛，统计每个 AI 的总存活轮数和获胜次数。
+          您作为裁判可以自由选择参赛 AI。系统将进行10场完整比赛，统计每个 AI 的总存活轮数和获胜次数。
           只有配置完整、测试通过且启用的 AI 才能参赛，您可以在日志控制台查看比赛的过程。
         </div>
       </div>

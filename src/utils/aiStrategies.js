@@ -1,4 +1,5 @@
 import { AIClient, AIConfigManager } from './aiClient';
+import { formatModelName } from './aiClient';
 
 // AI配置管理器实例
 const configManager = new AIConfigManager();
@@ -42,7 +43,7 @@ export const aiStrategies = {
 // AI厂商信息（用于选择界面）
 export const aiVendors = [
   {
-    name: 'OpenAI',
+    name: 'GPT',
   },
   {
     name: 'Claude',
@@ -57,7 +58,7 @@ export const aiVendors = [
     name: 'DeepSeek',
   },
   {
-    name: 'Alibaba',
+    name: 'Qwen',
   }
 ];
 
@@ -78,7 +79,7 @@ export const getAIStatus = () => {
       hasModel: !!config.model,
       tested: config.tested || false,
       vendor: config.vendor || name,
-      model: config.model || ''
+      model: formatModelName(config.model) || ''
     };
   });
   
@@ -295,10 +296,10 @@ export const playTournament = async (selectedAIs, abortSignal = null) => {
 
   // 记录锦标赛开始
   if (globalLogger) {
-    globalLogger.logInfo(`🏆 开始5场锦标赛，参赛AI: ${selectedAIs.join(', ')}`, 'SYSTEM');
+    globalLogger.logInfo(`🏆 开始10场锦标赛，参赛AI: ${selectedAIs.join(', ')}`, 'SYSTEM');
   }
 
-  const totalMatches = 5;
+  const totalMatches = 10;
   const allMatches = [];
   const totalSurvivalRounds = {};
   const winCounts = {};
@@ -309,7 +310,7 @@ export const playTournament = async (selectedAIs, abortSignal = null) => {
     winCounts[ai] = 0;
   });
 
-  // 进行5次完整比赛
+  // 进行10次完整比赛
   for (let matchNumber = 1; matchNumber <= totalMatches; matchNumber++) {
     // 检查是否被终止
     if (abortSignal && abortSignal.aborted) {
@@ -317,7 +318,7 @@ export const playTournament = async (selectedAIs, abortSignal = null) => {
     }
 
     if (globalLogger) {
-      globalLogger.logInfo(`🎯 开始第 ${matchNumber}/5 场比赛`, 'SYSTEM');
+      globalLogger.logInfo(`🎯 开始第 ${matchNumber}/10 场比赛`, 'SYSTEM');
     }
 
     const matchResult = await playSingleMatch(selectedAIs, abortSignal);

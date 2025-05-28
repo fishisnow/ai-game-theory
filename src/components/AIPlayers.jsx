@@ -1,5 +1,6 @@
 import React from 'react';
 import { aiVendors } from '../utils/aiStrategies';
+import { formatModelName } from '../utils/aiClient';
 
 const AIPlayers = ({ aiStatus, onConfigClick }) => {
   const getStatusIcon = (playerName) => {
@@ -51,7 +52,7 @@ const AIPlayers = ({ aiStatus, onConfigClick }) => {
   const getModelInfo = (playerName) => {
     const status = aiStatus[playerName];
     if (!status || !status.model) return '';
-    return status.model;
+    return formatModelName(status.model);
   };
 
   // 统计可参赛的AI数量

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { getEligibleAIs, aiVendors, getAIStatus } from '../utils/aiStrategies';
+import { formatModelName } from '../utils/aiClient';
 
 const AISelector = ({ onSelectionChange, selectedAIs = [] }) => {
   const [eligibleAIs, setEligibleAIs] = useState([]);
@@ -41,7 +42,7 @@ const AISelector = ({ onSelectionChange, selectedAIs = [] }) => {
 
   const getModelInfo = (aiName) => {
     const status = aiStatus[aiName];
-    return status ? status.model : '';
+    return status ? formatModelName(status.model) : '';
   };
 
   const getVendorInfo = (aiName) => {

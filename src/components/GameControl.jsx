@@ -73,7 +73,7 @@ const GameControl = ({
         
         {isPlaying && selectedAIs.length > 0 && (
           <div className="text-cyber-yellow text-sm animate-pulse">
-            ⚡ {selectedAIs.length}个AI正在进行5场激烈的淘汰制锦标赛，请稍候...
+            ⚡ {selectedAIs.length}个AI正在进行10场激烈的淘汰制锦标赛，请稍候...
             <div className="text-xs text-gray-400 mt-1">
               💡 可以随时点击"终止比赛"按钮停止当前比赛
             </div>

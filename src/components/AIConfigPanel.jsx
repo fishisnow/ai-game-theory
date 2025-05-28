@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { AIConfigManager } from '../utils/aiClient';
+import { formatModelName } from '../utils/aiClient';
 
 const AIConfigPanel = ({ isOpen, onClose, onConfigUpdate }) => {
   const [configManager] = useState(() => new AIConfigManager());
@@ -190,7 +191,7 @@ const AIConfigPanel = ({ isOpen, onClose, onConfigUpdate }) => {
               <p className="text-xs text-gray-300">
                 配置此厂商的API信息和模型。实际参赛时将显示为：
                 <span className="text-cyber-blue font-bold ml-1">
-                  {configs[activeTab].vendor} {configs[activeTab].model || '[模型名称]'}
+                  {configs[activeTab].vendor} {formatModelName(configs[activeTab].model) || '[模型名称]'}
                 </span>
               </p>
             </div>
