@@ -39,10 +39,6 @@ const AISelector = ({ onSelectionChange, selectedAIs = [] }) => {
     onSelectionChange([]);
   };
 
-  const getAIInfo = (aiName) => {
-    return aiVendors.find(vendor => vendor.name === aiName);
-  };
-
   const getModelInfo = (aiName) => {
     const status = aiStatus[aiName];
     return status ? status.model : '';
@@ -55,18 +51,15 @@ const AISelector = ({ onSelectionChange, selectedAIs = [] }) => {
 
   if (eligibleAIs.length === 0) {
     return (
-      <div className="cyber-card border-red-500 shadow-lg shadow-red-500/20 p-4">
-        <h3 className="text-xl text-red-400 text-center mb-4 flex items-center justify-center">
+      <div className="cyber-card border-red-500 shadow-lg shadow-red-500/20 p-3">
+        <h3 className="text-lg text-red-400 text-center mb-3 flex items-center justify-center">
           <span className="mr-2">⚠️</span>
           无可参赛AI
         </h3>
         <div className="text-center text-gray-300">
-          <p className="mb-4">当前没有可参赛的AI模型。</p>
-          <p className="text-sm text-gray-400">
-            请先在AI配置中完成以下步骤：
-            <br />1. 配置API信息
-            <br />2. 测试连接成功
-            <br />3. 启用参赛
+          <p className="mb-3 text-sm">当前没有可参赛的AI模型。</p>
+          <p className="text-xs text-gray-400">
+            请先在AI配置中完成：配置API → 测试连接 → 启用参赛
           </p>
         </div>
       </div>
@@ -74,31 +67,31 @@ const AISelector = ({ onSelectionChange, selectedAIs = [] }) => {
   }
 
   return (
-    <div className="cyber-card border-cyber-yellow shadow-lg shadow-cyber-yellow/20 p-4">
-      <div className="flex justify-between items-center mb-4">
-        <h3 className="text-xl text-cyber-yellow flex items-center">
+    <div className="cyber-card border-cyber-yellow shadow-lg shadow-cyber-yellow/20 p-3">
+      <div className="flex justify-between items-center mb-3">
+        <h3 className="text-lg text-cyber-yellow flex items-center">
           <span className="mr-2">🎯</span>
           裁判选择参赛AI ({localSelectedAIs.length}/{eligibleAIs.length})
         </h3>
         <div className="flex space-x-2">
           <button
             onClick={handleSelectAll}
-            className="text-xs px-3 py-1 bg-cyber-green text-black rounded-lg hover:bg-opacity-80 transition-all duration-300 font-semibold"
+            className="text-xs px-2 py-1 bg-cyber-green text-black rounded hover:bg-opacity-80 transition-all duration-300 font-semibold"
           >
             全选
           </button>
           <button
             onClick={handleClearAll}
-            className="text-xs px-3 py-1 bg-red-500 text-white rounded-lg hover:bg-opacity-80 transition-all duration-300 font-semibold"
+            className="text-xs px-2 py-1 bg-red-500 text-white rounded hover:bg-opacity-80 transition-all duration-300 font-semibold"
           >
             清空
           </button>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 mb-4">
+      {/* 卡片形式的AI选择列表 */}
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 mb-3">
         {eligibleAIs.map((aiName) => {
-          const aiInfo = getAIInfo(aiName);
           const modelInfo = getModelInfo(aiName);
           const vendorInfo = getVendorInfo(aiName);
           const isSelected = localSelectedAIs.includes(aiName);
@@ -106,39 +99,31 @@ const AISelector = ({ onSelectionChange, selectedAIs = [] }) => {
           return (
             <div
               key={aiName}
-              className={`bg-black bg-opacity-40 rounded-lg p-3 border-2 cursor-pointer transition-all duration-300 ${
+              className={`relative p-3 rounded-lg border cursor-pointer transition-all duration-300 hover:scale-105 ${
                 isSelected
-                  ? 'border-cyber-green shadow-lg shadow-cyber-green/30'
-                  : 'border-gray-600 hover:border-cyber-yellow'
+                  ? 'border-cyber-green bg-cyber-green bg-opacity-10 shadow-lg shadow-cyber-green/30'
+                  : 'border-gray-600 bg-black bg-opacity-20 hover:border-cyber-yellow hover:bg-opacity-30 hover:shadow-md hover:shadow-cyber-yellow/20'
               }`}
               onClick={() => handleAIToggle(aiName)}
             >
-              <div className="flex items-center justify-between mb-2">
-                <div className="flex items-center space-x-2">
-                  <span className="text-lg">
-                    {isSelected ? '✅' : '⭕'}
-                  </span>
-                  <span className="font-bold text-cyber-blue text-sm">{vendorInfo}</span>
-                </div>
-                <span className="text-xs text-cyber-green font-semibold">
-                  可参赛
+              {/* 选中状态指示器 */}
+              <div className="absolute top-2 right-2">
+                <span className="text-lg">
+                  {isSelected ? '✅' : '⭕'}
                 </span>
               </div>
-              {modelInfo && (
-                <div className="text-xs text-cyber-yellow mb-1">
-                  <span className="text-cyber-green">模型:</span> {modelInfo}
+              
+              {/* AI信息 */}
+              <div className="pr-8">
+                <div className="font-bold text-cyber-blue text-sm mb-1 truncate">
+                  {vendorInfo}
                 </div>
-              )}
-              {aiInfo && (
-                <>
-                  <div className="text-xs text-gray-300 mb-1">
-                    <span className="text-cyber-green">策略:</span> {aiInfo.strategy}
+                {modelInfo && (
+                  <div className="text-xs text-cyber-yellow bg-black bg-opacity-40 px-2 py-1 rounded mb-2 truncate">
+                    {modelInfo}
                   </div>
-                  <div className="text-xs text-gray-400">
-                    {aiInfo.description}
-                  </div>
-                </>
-              )}
+                )}
+              </div>
             </div>
           );
         })}
@@ -146,11 +131,11 @@ const AISelector = ({ onSelectionChange, selectedAIs = [] }) => {
 
       <div className="text-center">
         {localSelectedAIs.length < 2 ? (
-          <div className="text-red-400 text-sm">
+          <div className="text-red-400 text-xs">
             ⚠️ 至少需要选择2个AI才能开始比赛
           </div>
         ) : (
-          <div className="text-cyber-green text-sm">
+          <div className="text-cyber-green text-xs">
             ✅ 已选择 {localSelectedAIs.length} 个AI，可以开始比赛
           </div>
         )}

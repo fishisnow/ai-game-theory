@@ -51,7 +51,7 @@ export const aiVendors = [
     name: 'Gemini',
   },
   {
-    name: 'Azure-OpenAI',
+    name: 'Doubao',
   },
   {
     name: 'DeepSeek',
@@ -295,7 +295,7 @@ export const playTournament = async (selectedAIs, abortSignal = null) => {
 
   // 记录锦标赛开始
   if (globalLogger) {
-    globalLogger.logInfo(`🏆 开始5场锦标赛，参赛AI: ${selectedAIs.join(', ')}`, 'SYSTEM', { selectedAIs });
+    globalLogger.logInfo(`🏆 开始5场锦标赛，参赛AI: ${selectedAIs.join(', ')}`, 'SYSTEM');
   }
 
   const totalMatches = 5;
@@ -317,7 +317,7 @@ export const playTournament = async (selectedAIs, abortSignal = null) => {
     }
 
     if (globalLogger) {
-      globalLogger.logInfo(`🎯 开始第 ${matchNumber}/5 场比赛`, 'SYSTEM', { matchNumber, totalMatches });
+      globalLogger.logInfo(`🎯 开始第 ${matchNumber}/5 场比赛`, 'SYSTEM');
     }
 
     const matchResult = await playSingleMatch(selectedAIs, abortSignal);
@@ -344,11 +344,7 @@ export const playTournament = async (selectedAIs, abortSignal = null) => {
 
     if (globalLogger) {
       const winnerText = Array.isArray(matchResult.winner) ? matchResult.winner.join(', ') : matchResult.winner;
-      globalLogger.logInfo(`✅ 第 ${matchNumber} 场比赛结束，获胜者: ${winnerText}`, 'SYSTEM', {
-        matchNumber,
-        winner: matchResult.winner,
-        totalRounds: matchResult.totalRounds
-      });
+      globalLogger.logInfo(`✅ 第 ${matchNumber} 场比赛结束，获胜者: ${winnerText}`, 'SYSTEM');
     }
   }
 
@@ -370,11 +366,7 @@ export const playTournament = async (selectedAIs, abortSignal = null) => {
       .sort(([,a], [,b]) => b - a)
       .map(([name, wins]) => `${name}(${wins}胜)`);
     
-    globalLogger.logInfo(`🏆 锦标赛结束！获胜排名: ${sortedByWins.join(', ')}`, 'SYSTEM', {
-      winCounts,
-      averageSurvivalRounds,
-      totalMatches
-    });
+    globalLogger.logInfo(`🏆 锦标赛结束！获胜排名: ${sortedByWins.join(', ')}`, 'SYSTEM');
   }
 
   return {

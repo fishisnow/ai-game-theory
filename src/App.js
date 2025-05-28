@@ -95,6 +95,9 @@ function App() {
         onClose={aiConsole.closeConsole}
         logs={aiConsole.logs}
         onClearLogs={aiConsole.clearLogs}
+        activeAIs={aiConsole.activeAIs}
+        getLogsByAI={aiConsole.getLogsByAI}
+        getLogsByRound={aiConsole.getLogsByRound}
       />
     </div>
   );

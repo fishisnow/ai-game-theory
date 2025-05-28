@@ -11,28 +11,22 @@ export class AIClient {
 
   async makeChoice(gameContext) {
     try {
-      this.log('thinking', `开始分析第${gameContext.round}轮的策略...`);
-      
       const prompt = this.buildPrompt(gameContext);
-      this.log('thinking', `构建提示词完成，准备向${this.vendor}发送请求`);
-      
+      console.log(prompt);
       const requestBody = {
         model: this.model,
         messages: [
           {
             role: 'system',
-            content: '你是一个参与博弈论游戏的AI。你需要在"猜2/3平均数"游戏中做出最优选择。请详细说明你的思考过程，然后给出你的选择。'
+            content: '你是一个参与博弈论游戏的AI。你需要在"猜2/3平均数"游戏中做出最优选择。请分析局势并严格按照JSON格式回复：{"reasoning": "你的分析", "choice": 数字}。choice必须是0-100之间的整数。'
           },
           {
             role: 'user',
             content: prompt
           }
         ],
-        max_tokens: 300, // 增加token数量以获取更详细的思考过程
-        temperature: 0.7
+        max_tokens: 1024
       };
-
-      this.log('thinking', `发送API请求到 ${this.apiUrl}`);
       
       const response = await fetch(this.apiUrl, {
         method: 'POST',
@@ -52,35 +46,26 @@ export class AIClient {
       const data = await response.json();
       const aiResponse = data.choices[0].message.content;
       
-      this.log('thinking', `收到AI回复: ${aiResponse}`);
-      
-      // 从AI回复中提取数字
-      const choice = this.extractNumber(aiResponse);
+      // 从AI回复中提取数字和推理过程
+      const { choice, reasoning } = this.extractChoiceAndReasoning(aiResponse);
       
       if (choice === null || choice < 0 || choice > 100) {
-        const warningMsg = `返回无效选择: ${aiResponse}, 使用备选策略`;
-        this.log('warning', warningMsg);
         const fallbackChoice = this.getFallbackChoice();
-        this.log('decision', `使用备选策略选择: ${fallbackChoice}`, { 
-          originalResponse: aiResponse, 
-          fallbackChoice 
-        });
+        this.log('decision', `选择: ${fallbackChoice} (备选策略)`);
         return fallbackChoice;
       }
       
-      this.log('decision', `最终选择: ${choice}`, { 
-        choice, 
-        reasoning: aiResponse,
-        round: gameContext.round,
-        activePlayers: gameContext.activePlayers
-      });
+      // 记录AI的思考过程和最终选择
+      if (reasoning) {
+        this.log('thinking', reasoning);
+      }
+      this.log('decision', `选择: ${choice}`);
       
       return choice;
     } catch (error) {
-      this.log('error', `AI请求失败: ${error.message}`, error);
-      // 如果API调用失败，返回一个基于简单策略的数字
+      this.log('error', `请求失败: ${error.message}`);
       const fallbackChoice = this.getFallbackChoice();
-      this.log('decision', `使用紧急备选策略: ${fallbackChoice}`, { fallbackChoice });
+      this.log('decision', `选择: ${fallbackChoice} (紧急备选)`);
       return fallbackChoice;
     }
   }
@@ -93,22 +78,25 @@ export class AIClient {
           this.logger.logAIThinking(this.name, message);
           break;
         case 'decision':
-          this.logger.logAIDecision(this.name, message, data);
+          this.logger.logAIDecision(this.name, message);
           break;
         case 'error':
-          this.logger.logError(message, this.name, data);
+          this.logger.logError(message, this.name);
           break;
         case 'warning':
-          this.logger.logWarning(message, this.name, data);
+          this.logger.logWarning(message, this.name);
           break;
         default:
-          this.logger.logInfo(message, this.name, data);
+          this.logger.logInfo(message, this.name);
       }
     }
   }
 
   buildPrompt(gameContext) {
     const { round, activePlayers, previousRounds, isFirstMatch } = gameContext;
+    
+    // 从参与者列表中排除当前AI，得到对手列表
+    const opponents = activePlayers.filter(player => player !== this.name);
     
     let prompt = `这是一个"猜2/3平均数"的博弈游戏。
 
@@ -118,35 +106,103 @@ export class AIClient {
 - 距离目标值最远的玩家被淘汰
 - 游戏继续直到只剩一人
 
+**重要说明：在以下所有信息中，"You"代表你自己（${this.name}），其他名称代表你的对手。**
+
 当前情况：
 - 第${round}轮
-- 当前参与者：${activePlayers.join(', ')}`;
+- 你的对手：${opponents.length > 0 ? opponents.join(', ') : '无（你已获胜）'}`;
 
     if (previousRounds && previousRounds.length > 0) {
-      prompt += `\n\n历史轮次：`;
+      prompt += `\n\n历史轮次详情：`;
       previousRounds.forEach((r, index) => {
-        prompt += `\n第${index + 1}轮: 平均值${r.average}, 目标值${r.target}, 淘汰${r.eliminatedPlayers.join(', ')}`;
+        prompt += `\n\n第${index + 1}轮:`;
+        prompt += `\n  平均值: ${r.average}, 目标值: ${r.target}`;
+        
+        // 显示每个玩家的选择
+        prompt += `\n  各玩家选择:`;
+        Object.entries(r.choices).forEach(([player, choice]) => {
+          const isEliminated = r.eliminatedPlayers.includes(player);
+          const status = isEliminated ? ' (被淘汰)' : '';
+          const isMe = player === this.name;
+          const playerLabel = isMe ? 'You' : player;
+          prompt += `\n    ${playerLabel}: ${choice}${status}`;
+        });
+        
+        if (r.eliminatedPlayers.length > 0) {
+          // 在淘汰信息中也使用相同的标识方式
+          const eliminatedDisplay = r.eliminatedPlayers.map(player => 
+            player === this.name ? 'You' : player
+          ).join(', ');
+          prompt += `\n  本轮淘汰: ${eliminatedDisplay}`;
+        }
       });
+      
+      // 添加对手策略分析提示
+      if (opponents.length > 0) {
+        prompt += `\n\n对手策略分析提示：`;
+        prompt += `\n- 观察对手的历史选择模式`;
+        prompt += `\n- 分析对手是否趋向保守或激进`;
+        prompt += `\n- 考虑对手可能的心理变化和适应性`;
+        prompt += `\n- 预测对手在当前轮次的可能选择范围`;
+        prompt += `\n- 注意：上述历史数据中"You"是你自己的选择，其他名称是对手的选择`;
+      }
     }
 
-    prompt += `\n\n请分析当前局势，考虑其他玩家可能的策略，然后选择一个0到100之间的整数。
-请直接回答数字，可以简单说明理由。`;
+    prompt += `\n\n请基于以上信息进行深度分析：
+1. 分析每个对手的选择模式和策略倾向
+2. 考虑对手可能的心理状态变化（如被淘汰压力、适应性调整等）
+3. 预测对手在本轮的可能选择范围
+4. 制定你的最优策略来应对当前局势
+
+然后选择一个0到100之间的整数。
+
+**重要：请严格按照以下JSON格式回复，不要添加任何其他内容：**
+
+{
+  "reasoning": "你的详细分析和推理过程，包括对手策略分析",
+  "choice": 你的数字选择
+}
+
+示例：
+{
+  "reasoning": "通过分析历史数据，发现对手A倾向于选择较大数字，对手B比较保守。考虑到当前轮次和心理压力，我预测平均值会在X附近，因此选择Y",
+  "choice": 33
+}`;
 
     return prompt;
   }
 
-  extractNumber(text) {
-    // 尝试提取文本中的数字
+  extractChoiceAndReasoning(text) {
+    // 首先尝试解析JSON格式
+    try {
+      const jsonMatch = text.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        const jsonData = JSON.parse(jsonMatch[0]);
+        if (jsonData.choice !== undefined) {
+          const choice = parseInt(jsonData.choice);
+          const reasoning = jsonData.reasoning || null;
+          if (!isNaN(choice) && choice >= 0 && choice <= 100) {
+            return { choice, reasoning };
+          }
+        }
+      }
+    } catch (error) {
+      // JSON解析失败，继续尝试备用方案
+    }
+
+    // 备用方案：查找最后一个有效的数字
     const matches = text.match(/\b(\d{1,3})\b/g);
     if (matches) {
-      for (const match of matches) {
-        const num = parseInt(match);
+      // 从后往前查找，优先选择最后出现的有效数字
+      for (let i = matches.length - 1; i >= 0; i--) {
+        const num = parseInt(matches[i]);
         if (num >= 0 && num <= 100) {
-          return num;
+          return { choice: num, reasoning: null };
         }
       }
     }
-    return null;
+    
+    return { choice: null, reasoning: null };
   }
 
   getFallbackChoice() {
@@ -210,12 +266,12 @@ export class AIConfigManager {
         enabled: false,
         tested: false
       },
-      'Azure-OpenAI': {
-        vendor: 'Microsoft',
-        name: 'Azure-OpenAI',
-        apiUrl: 'https://your-resource.openai.azure.com/openai/deployments/your-deployment/chat/completions?api-version=2024-02-15-preview',
+      'Doubao': {
+        vendor: 'ByteDance',
+        name: 'Doubao',
+        apiUrl: 'https://ark.cn-beijing.volces.com/api/v3/chat/completions',
         apiKey: '',
-        model: 'gpt-4',
+        model: 'doubao-pro-4k',
         enabled: false,
         tested: false
       },
@@ -276,7 +332,7 @@ export class AIConfigManager {
   getDisplayName(name) {
     const config = this.configs[name];
     if (!config) return name;
-    return `${config.vendor} ${config.model}`;
+    return `${config.model}`;
   }
 
   // 获取厂商名称
