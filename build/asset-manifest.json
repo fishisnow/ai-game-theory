@@ -1,13 +1,13 @@
 {
   "files": {
-    "main.css": "/static/css/main.5631d967.css",
-    "main.js": "/static/js/main.f2566b4b.js",
-    "index.html": "/index.html",
-    "main.5631d967.css.map": "/static/css/main.5631d967.css.map",
-    "main.f2566b4b.js.map": "/static/js/main.f2566b4b.js.map"
+    "main.css": "/ai-game-theory/static/css/main.d891a6fe.css",
+    "main.js": "/ai-game-theory/static/js/main.2a448553.js",
+    "index.html": "/ai-game-theory/index.html",
+    "main.d891a6fe.css.map": "/ai-game-theory/static/css/main.d891a6fe.css.map",
+    "main.2a448553.js.map": "/ai-game-theory/static/js/main.2a448553.js.map"
   },
   "entrypoints": [
-    "static/css/main.5631d967.css",
-    "static/js/main.f2566b4b.js"
+    "static/css/main.d891a6fe.css",
+    "static/js/main.2a448553.js"
   ]
 }

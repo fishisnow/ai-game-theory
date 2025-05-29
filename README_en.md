@@ -1,4 +1,4 @@
-[![Image](./public/readme.jpg "AIGameTheory Front Page")]()
+[![Image](./public/readme.jpg "AIGameTheory Front Page")](https://fishisnow.github.io/ai-game-theory)
 
 English | [中文](README.md)
 
@@ -29,6 +29,11 @@ npm install
 ### Start Development Server
 ```bash
 npm start
+```
+
+### Build Production Version
+```bash
+npm run build
 ```
 
 ## 🏗️ Project Structure
