@@ -173,6 +173,27 @@ export const playSingleMatch = async (selectedAIs, abortSignal = null) => {
     globalLogger.logGameStart(selectedAIs);
   }
 
+  // 创建处理AI选择的函数，避免在循环中声明函数
+  const createAIChoicePromise = (player, currentRound, currentActivePlayers, currentRoundResults, logger, choicesObj) => {
+    const gameContext = {
+      round: currentRound,
+      activePlayers: [...currentActivePlayers],
+      previousRounds: currentRoundResults,
+      isFirstMatch: currentRoundResults.length === 0
+    };
+    
+    return aiStrategies.getChoice(player, gameContext).then(choice => {
+      choicesObj[player] = choice;
+    }).catch(error => {
+      if (logger) {
+        logger.logError(`${player} 选择失败: ${error.message}`, player, error);
+      }
+      console.error(`${player} 选择失败:`, error);
+      // 如果AI调用失败，该AI自动被淘汰
+      choicesObj[player] = -1; // 设置一个无效值，确保被淘汰
+    });
+  };
+
   while (activePlayers.length > 1) {
     // 检查是否被终止
     if (abortSignal && abortSignal.aborted) {
@@ -188,29 +209,14 @@ export const playSingleMatch = async (selectedAIs, abortSignal = null) => {
     const aiChoices = {};
     const aiPromises = [];
     
-    // 创建处理AI选择的函数，避免在循环中声明函数
-    const createAIChoicePromise = (player, currentRound, currentActivePlayers, currentRoundResults, logger) => {
-      const gameContext = {
-        round: currentRound,
-        activePlayers: [...currentActivePlayers],
-        previousRounds: currentRoundResults,
-        isFirstMatch: currentRoundResults.length === 0
-      };
-      
-      return aiStrategies.getChoice(player, gameContext).then(choice => {
-        aiChoices[player] = choice;
-      }).catch(error => {
-        if (logger) {
-          logger.logError(`${player} 选择失败: ${error.message}`, player, error);
-        }
-        console.error(`${player} 选择失败:`, error);
-        // 如果AI调用失败，该AI自动被淘汰
-        aiChoices[player] = -1; // 设置一个无效值，确保被淘汰
-      });
-    };
+    // 捕获当前循环的变量值
+    const currentRound = round;
+    const currentActivePlayers = [...activePlayers];
+    const currentRoundResults = [...roundResults];
+    const currentLogger = globalLogger;
     
-    activePlayers.forEach(player => {
-      aiPromises.push(createAIChoicePromise(player, round, activePlayers, roundResults, globalLogger));
+    currentActivePlayers.forEach(player => {
+      aiPromises.push(createAIChoicePromise(player, currentRound, currentActivePlayers, currentRoundResults, currentLogger, aiChoices));
     });
     
     // 等待所有AI做出选择
