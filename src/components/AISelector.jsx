@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { getEligibleAIs, aiVendors, getAIStatus } from '../utils/aiStrategies';
+import { getEligibleAIs, getAIStatus } from '../utils/aiStrategies';
 import { formatModelName } from '../utils/aiClient';
 
 const AISelector = ({ onSelectionChange, selectedAIs = [] }) => {

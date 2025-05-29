@@ -188,26 +188,29 @@ export const playSingleMatch = async (selectedAIs, abortSignal = null) => {
     const aiChoices = {};
     const aiPromises = [];
     
-    activePlayers.forEach(player => {
+    // 创建处理AI选择的函数，避免在循环中声明函数
+    const createAIChoicePromise = (player, currentRound, currentActivePlayers, currentRoundResults, logger) => {
       const gameContext = {
-        round,
-        activePlayers: [...activePlayers],
-        previousRounds: roundResults,
-        isFirstMatch: roundResults.length === 0
+        round: currentRound,
+        activePlayers: [...currentActivePlayers],
+        previousRounds: currentRoundResults,
+        isFirstMatch: currentRoundResults.length === 0
       };
       
-      aiPromises.push(
-        aiStrategies.getChoice(player, gameContext).then(choice => {
-          aiChoices[player] = choice;
-        }).catch(error => {
-          if (globalLogger) {
-            globalLogger.logError(`${player} 选择失败: ${error.message}`, player, error);
-          }
-          console.error(`${player} 选择失败:`, error);
-          // 如果AI调用失败，该AI自动被淘汰
-          aiChoices[player] = -1; // 设置一个无效值，确保被淘汰
-        })
-      );
+      return aiStrategies.getChoice(player, gameContext).then(choice => {
+        aiChoices[player] = choice;
+      }).catch(error => {
+        if (logger) {
+          logger.logError(`${player} 选择失败: ${error.message}`, player, error);
+        }
+        console.error(`${player} 选择失败:`, error);
+        // 如果AI调用失败，该AI自动被淘汰
+        aiChoices[player] = -1; // 设置一个无效值，确保被淘汰
+      });
+    };
+    
+    activePlayers.forEach(player => {
+      aiPromises.push(createAIChoicePromise(player, round, activePlayers, roundResults, globalLogger));
     });
     
     // 等待所有AI做出选择
@@ -237,8 +240,9 @@ export const playSingleMatch = async (selectedAIs, abortSignal = null) => {
     // 如果有淘汰发生
     if (roundResult.hasElimination) {
       // 更新存活轮数（被淘汰的玩家记录当前轮数）
+      const currentRound = round; // 捕获当前轮数值
       roundResult.eliminatedPlayers.forEach(player => {
-        survivalRounds[player] = round;
+        survivalRounds[player] = currentRound;
       });
       
       // 移除被淘汰的玩家
@@ -263,8 +267,9 @@ export const playSingleMatch = async (selectedAIs, abortSignal = null) => {
     survivalRounds[activePlayers[0]] = round;
   } else if (activePlayers.length > 1) {
     // 如果最后仍有多人，他们都获得当前轮数
+    const finalRound = round; // 捕获当前轮数值
     activePlayers.forEach(player => {
-      survivalRounds[player] = round;
+      survivalRounds[player] = finalRound;
     });
   }
 
@@ -333,8 +338,9 @@ export const playTournament = async (selectedAIs, abortSignal = null) => {
       winCounts[matchResult.winner]++;
     } else if (Array.isArray(matchResult.winner)) {
       // 平局的情况
+      const winnerCount = matchResult.winner.length;
       matchResult.winner.forEach(winner => {
-        winCounts[winner] += 1 / matchResult.winner.length;
+        winCounts[winner] += 1 / winnerCount;
       });
     }
     

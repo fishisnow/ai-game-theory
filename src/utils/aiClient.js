@@ -103,7 +103,7 @@ export class AIClient {
   }
 
   buildPrompt(gameContext) {
-    const { round, activePlayers, previousRounds, isFirstMatch } = gameContext;
+    const { round, activePlayers, previousRounds} = gameContext;
     
     // 从参与者列表中排除当前AI，得到对手列表
     const opponents = activePlayers.filter(player => player !== this.name);
