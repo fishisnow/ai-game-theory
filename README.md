@@ -37,19 +37,6 @@ npm start
 npm run build
 ```
 
-## 🚀 部署
-
-本项目支持通过 GitHub Pages 自动部署。详细部署说明请参考 [DEPLOYMENT.md](DEPLOYMENT.md)。
-
-### 自动部署
-- 推送代码到 `main` 或 `master` 分支会自动触发 GitHub Actions 部署流程
-- 部署完成后可通过 GitHub Pages URL 访问
-
-### 手动部署
-```bash
-npm run deploy
-```
-
 ## 🏗️ 项目结构
 
 ```
